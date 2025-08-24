@@ -5,195 +5,191 @@
 ### Project Names
 
 - **Display Name**: WishSpark (A platform that sparks joy through personalized birthday wishlists.)
-- **Internal Name**: wishspark (Used for repository naming, environment variables, and internal references.)
+- **Internal Name**: wishspark-app (Used for repository naming, environment variables, and internal references.)
 
 ### Description
 
-WishSpark is a web application for managing birthday wishlists, with exclusive admin access to create, edit, delete, and view wishlists. In response to the preference for self-hosted solutions and the assessment that Supabase may introduce unnecessary complexity for this use case, the data management options have been adjusted. The application will support static file-based storage using JSON files for simplicity, or a full-fledged self-hosted database. For the database option, PocketBase is recommended over a standalone PostgreSQL instance, as it provides an integrated backend solution including a lightweight SQLite database, built-in authentication, RESTful API, and realtime capabilities—all self-hostable with minimal setup. If PostgreSQL is preferred, it can be used with Drizzle ORM for database interactions, though this requires additional configuration for authentication and API exposure.
+WishSpark is a web application designed exclusively for the admin user to manage birthday wishlists. In alignment with the revised requirements, the implementation will utilize only the `@nuxt/content` module of Nuxt 4 for handling content. Wishlists will be stored as static files (e.g., YAML or Markdown) within the `/content` directory, allowing the user to add or edit content directly via file modifications. The application will focus on reading and displaying these wishlists, with no additional database, authentication, or external services required. Management occurs outside the app (e.g., through a code editor or Git), as the user has specified that only they will add content. If in-app editing is desired in the future, it can be extended via server routes, but this is omitted for the MVP to adhere strictly to the constraints.
 
-This revised plan maintains the focus on a functional MVP, built with Nuxt 4 and Nuxt UI, while ensuring all components are self-hosted to align with the specified requirements.
+The application will be built using Nuxt 4 for the framework and Nuxt UI for user interface components, ensuring a responsive and modern design. This setup leverages `@nuxt/content` for querying and rendering content dynamically at build or runtime.
 
 ### Goals
 
-- Deliver an intuitive interface for wishlist management.
-- Ensure secure, self-hosted admin access without reliance on cloud services.
-- Support scalability for future enhancements.
-- Provide a deployable MVP suitable for self-hosting on a server or local environment.
+- Provide an intuitive interface for viewing and browsing wishlists.
+- Enable easy content management through static files, with no runtime write operations.
+- Deliver a scalable, self-hosted MVP deployable to platforms like Vercel or a static host.
+- Maintain simplicity by avoiding authentication and databases.
 
 ## Tech Stack
 
-- **Framework**: Nuxt 4 (for server-side rendering, API routes, and static generation).
-- **UI Library**: Nuxt UI (for pre-built components such as buttons, modals, tables, and forms).
-- **Data Storage Options**:
-  - **Static Files**: JSON files stored in the project's `/data` directory, managed via Nuxt's Nitro server routes.
-  - **Database**: PocketBase (self-hosted backend with SQLite) for persistent storage and authentication. Alternatively, self-hosted PostgreSQL with Drizzle ORM if a relational database is strictly required.
-- **Authentication**: Built-in email/password via PocketBase (for database mode) or a simple session-based password for static files. Google OAuth is omitted to prioritize self-hosting; if needed, it could be implemented via a self-hosted identity provider, but this is beyond the MVP scope.
-- **State Management**: Pinia (integrated with Nuxt).
+- **Framework**: Nuxt 4 (for server-side rendering, API routes if needed, and static generation).
+- **UI Library**: Nuxt UI (for pre-built components like buttons, modals, tables, and forms).
+- **Content Management**: `@nuxt/content` (for querying static files in YAML, Markdown, or JSON format).
+- **State Management**: Pinia (integrated with Nuxt, if needed for client-side state).
 - **Styling**: Tailwind CSS (included with Nuxt UI).
 - **Other Tools**:
   - TypeScript for type safety.
   - ESLint and Prettier for code quality.
-  - Self-hosting: Deployable on a VPS (e.g., via Docker) or locally; no cloud-specific dependencies.
+  - No external dependencies for auth or DB.
 
 ## Features
 
 ### Core Features
 
-1. **Authentication**:
-   - Admin login using email/password (PocketBase mode) or a simple session-based password (static mode).
-   - Logout functionality.
-   - Redirect unauthorized users to the login page.
+1. **Wishlist Viewing**:
+   - Display all wishlists fetched from static files.
+   - View individual wishlist details, including title, description, birthday date, and items (array of {name, link, price, notes}).
 
-2. **Wishlist Management**:
-   - Create new wishlists with fields: title, description, date (birthday), items (array of {name, link, price, notes}).
-   - Edit existing wishlists.
-   - Delete wishlists.
-   - View all wishlists in a dashboard with search and filter options (by date or title).
+2. **Dashboard**:
+   - Overview page showing all wishlists in a table or card layout using Nuxt UI components.
+   - Search and filter options (e.g., by date or title) implemented via client-side filtering on fetched content.
 
-3. **Dashboard**:
-   - Overview page displaying all wishlists in a table or card layout.
-   - Summary statistics (e.g., total wishlists, upcoming birthdays).
-
-4. **Additional Functionality**:
-   - Export wishlists to PDF or CSV.
-   - Basic validation for form inputs.
+3. **Additional Functionality**:
+   - Export wishlists to PDF or CSV (client-side implementation).
+   - Basic validation for display (e.g., formatting dates).
    - Responsive design for mobile and desktop.
 
 ### Non-Functional Requirements
 
-- Performance: Leverage server-side rendering for efficient loads.
-- Security: Protect API routes; use environment variables for sensitive data; ensure PocketBase or PostgreSQL is secured with proper access controls.
-- Accessibility: Adhere to ARIA standards via Nuxt UI components.
-- Error Handling: Present user-friendly messages for issues such as network failures.
+- Performance: Utilize static generation where possible for fast loads.
+- Security: No auth needed; assume local or private deployment.
+- Accessibility: Follow ARIA standards with Nuxt UI components.
+- Error Handling: Display user-friendly messages for content loading issues.
 
 ## Architecture
 
-- **Frontend**: Nuxt 4 pages and components for the UI.
-- **Backend**:
-  - For static: Nuxt server routes (`/server/api`) to handle JSON file operations.
-  - For database: PocketBase as a self-hosted server, accessed via its JS SDK for CRUD operations. If using PostgreSQL, integrate directly via Drizzle in Nuxt server routes.
+- **Frontend**: Nuxt 4 pages and components for UI.
+- **Backend/Content**: `@nuxt/content` to query files from `/content/wishlists` directory.
 - **Data Flow**:
-  - User authenticates → Access dashboard → Perform CRUD on wishlists via API calls.
-- **Folder Structure** (Standard Nuxt 4 layout, with adjustments):
-
+  - App fetches content at runtime or build time → Display in dashboard → User views details.
+- **Content Structure**:
+  - Each wishlist as a separate file, e.g., `/content/wishlists/birthday-2025.yaml` with frontmatter or structured data:
+    ```yaml
+    title: Birthday 2025
+    description: Gifts for family
+    birthday_date: 2025-08-24
+    items:
+      - name: Book
+        link: https://example.com/book
+        price: 20
+        notes: Classic edition
+    ```
+- **Folder Structure** (Standard Nuxt 4 layout):
   ```
-  wishspark/
+  wishspark-app/
   ├── app.config.ts          # App configurations
-  ├── assets/                # Static assets
-  ├── components/            # Reusable components (e.g., WishlistForm.vue)
-  ├── composables/           # Custom hooks (e.g., useAuth.ts)
-  ├── data/                  # For static JSON files (e.g., wishlists.json)
+  ├── assets/                # Static assets (images, etc.)
+  ├── components/            # Reusable Nuxt UI-based components (e.g., WishlistCard.vue)
+  ├── composables/           # Custom hooks (e.g., useContent.ts)
+  ├── content/               # Content directory
+  │   └── wishlists/         # Wishlist files (e.g., *.yaml or *.md)
   ├── layouts/               # Default layout with navigation
-  ├── middleware/            # Auth middleware
-  ├── pages/                 # Routes (e.g., index.vue for dashboard)
-  ├── plugins/               # Plugins (e.g., PocketBase client)
+  ├── pages/                 # Routes (e.g., index.vue for dashboard, wishlists/[slug].vue)
+  ├── plugins/               # Plugins if needed
   ├── public/                # Public files
-  ├── server/                # API routes (for static or PostgreSQL mode)
-  ├── stores/                # Pinia stores (e.g., wishlistStore.ts)
+  ├── stores/                # Pinia stores (e.g., wishlistStore.ts, optional)
   ├── nuxt.config.ts         # Nuxt configuration
   ├── package.json           # Dependencies
   ├── tsconfig.json          # TypeScript config
-  └── README.md              # Documentation
+  └── README.md              # Project documentation
   ```
-
-  - PocketBase would run as a separate self-hosted service (e.g., via Docker), with the Nuxt app connecting to its API endpoint.
-
-## Database Schema (For Database Option)
-
-- **PocketBase Collection: wishlists**
-  - id: string (auto-generated)
-  - title: string (required)
-  - description: text (optional)
-  - birthday_date: date (required)
-  - items: json (array of objects: {name: string, link: string, price: number, notes: text})
-  - created: timestamp (auto)
-  - updated: timestamp (auto)
-  - Restrict access to admin via PocketBase's record rules.
-
-- If using PostgreSQL, mirror the above schema with an additional `admin_id` for ownership.
 
 ## Implementation Steps
 
 ### Step 1: Project Setup
 
 1. Install Node.js (v20+ recommended).
-2. Initialize Nuxt 4 project:
+2. Create a new Nuxt 4 project:
    ```
-   npx nuxi@latest init wishspark
-   cd wishspark
+   npx nuxi@latest init wishspark-app
+   cd wishspark-app
    npm install
    ```
 3. Install dependencies:
+   - `@nuxt/content`: `npm install @nuxt/content`
    - Nuxt UI: `npm install @nuxt/ui`
-   - Pinia: `npm install pinia @pinia/nuxt`
-   - For PocketBase: `npm install pocketbase`
-   - For PostgreSQL (alternative): `npm install drizzle-orm drizzle-kit postgres`
+   - Pinia (optional): `npm install pinia @pinia/nuxt`
    - Other: `npm install -D typescript eslint prettier`
 4. Configure `nuxt.config.ts`:
    ```typescript
    export default defineNuxtConfig({
      devtools: { enabled: true },
-     modules: ['@nuxt/ui', '@pinia/nuxt'],
+     modules: ['@nuxt/content', '@nuxt/ui', '@pinia/nuxt'],
+     content: {
+       documentDriven: false, // Optional; enable if using MDX
+       sources: {
+         wishlists: {
+           driver: 'fs',
+           prefix: '/wishlists',
+           base: 'content/wishlists',
+         },
+       },
+     },
      typescript: { strict: true },
    });
    ```
-5. Set up environment variables in `.env`:
-   ```
-   POCKETBASE_URL=http://localhost:8090  # Or your self-hosted URL
-   ADMIN_EMAIL=admin@example.com
-   ADMIN_PASSWORD=secret_password
-   # For PostgreSQL: PG_CONNECTION_STRING=postgres://user:pass@localhost:5432/db
-   ```
-6. For PocketBase: Download and run PocketBase locally or via Docker; create an admin account and the `wishlists` collection.
-7. Initialize Git and commit the setup.
+5. Initialize Git repository and commit initial setup.
+6. Create sample content files in `/content/wishlists` to test.
 
-### Step 2: Authentication
+### Step 2: Content Fetching
 
-- **Static Mode**: Implement middleware and sessions using `useCookie` for password-based auth.
-- **PocketBase Mode**: Use the PocketBase JS SDK for admin auth (login with email/password); store auth token in cookies.
-- **PostgreSQL Mode**: Handle auth manually (e.g., via JWT in Nuxt server routes).
-- Apply middleware to protect dashboard and wishlist routes.
+- Use `$content` composable to query wishlists.
+- Create `/composables/useWishlists.ts`:
+  ```typescript
+  export const useWishlists = async () => {
+    const { $content } = useNuxtApp();
+    const wishlists = await $content('wishlists').fetch();
+    return wishlists;
+  };
+  ```
 
-### Step 3: Data Management
+### Step 3: Pages and Components
 
-- **Static Mode**: Use `/data/wishlists.json` with `fs` in server routes for CRUD.
-- **PocketBase Mode**: Integrate SDK in composables for collection operations.
-- **PostgreSQL Mode**: Set up Drizzle in `/server/utils/db.ts`; implement CRUD in server routes.
+1. **Dashboard Page** (`/pages/index.vue`):
+   - Fetch wishlists using the composable.
+   - Display in UTable or UCardGroup, with columns for title, date, etc.
+   - Implement client-side search/filter using computed properties.
 
-### Step 4: Pages and Components
+2. **Wishlist Detail Page** (`/pages/wishlists/[slug].vue`):
+   - Dynamic route to fetch specific wishlist by slug (e.g., file name without extension).
+   - Display details using UCard, UList, etc.
+   - Use `useRoute` to get slug and `$content` to fetch.
 
-1. **Login Page** (`/pages/login.vue`): Form for email/password.
-2. **Dashboard Page** (`/pages/index.vue`): UTable for wishlists, fetched via store.
-3. **Wishlist Detail/Edit Page** (`/pages/wishlists/[id].vue`): UForm for CRUD.
-4. **Components**: WishlistCard.vue, WishlistForm.vue.
-5. Pinia store `/stores/wishlist.ts` for state management.
+3. **Components**:
+   - WishlistCard.vue: Card for summary display.
+   - ItemList.vue: Reusable list for wishlist items.
 
-### Step 5: API Routes (For Static or PostgreSQL)
+4. Optional Pinia store `/stores/wishlist.ts` for caching fetched content if needed.
 
-- Define routes like `/server/api/wishlists.get.ts` for CRUD, protected by auth.
+### Step 4: Additional Features
 
-### Step 6: Testing and Polish
+- Implement export: Use libraries like jsPDF (client-side) for PDF export.
+  - Install: `npm install jspdf`
+  - Add button in dashboard to generate PDF from data.
 
-- Add tests with Vitest.
-- Implement error handling with UToast.
-- Ensure responsiveness.
+### Step 5: Testing and Polish
 
-### Step 7: Deployment
+- Add unit tests for components using Vitest (`npm install -D vitest`).
+- Implement error handling (e.g., if no content, show message).
+- Ensure responsive design with Tailwind.
 
-- Self-host: Run Nuxt via `npm run build` and `npm run start`; host PocketBase/PostgreSQL on the same server (e.g., via Docker Compose for orchestration).
+### Step 6: Deployment
+
+- Build for static hosting: `npm run generate` for static site.
+- Deploy to Vercel, Netlify, or self-host via a web server (e.g., Nginx serving the dist folder).
 
 ## Timeline Estimate (For One Developer)
 
-- Setup and Auth: 1-2 days.
-- Data and API: 1-2 days (PocketBase simplifies this).
-- UI Pages/Components: 2-3 days.
+- Setup: 1 day.
+- Content Fetching and Pages: 1-2 days.
+- UI Components and Features: 1-2 days.
 - Testing/Polish: 1 day.
-- Total: 5-8 days for MVP.
+- Total: 4-6 days for MVP.
 
 ## Potential Extensions
 
-- Public sharing of wishlists.
-- Birthday reminders via email.
-- Multi-admin capabilities.
+- In-app editing via server routes (if future need arises, using `fs` to write files).
+- Integration with Git for versioned content management.
+- Public sharing views.
 
-Proceed sequentially with this revised plan. If preferring PostgreSQL over PocketBase, note that it may require more boilerplate for auth and API management. Document changes in commits.
+Follow this plan sequentially. Since content addition is manual, include instructions in README.md on how to add/edit files and rebuild/deploy the app. Document any deviations in commit messages.
