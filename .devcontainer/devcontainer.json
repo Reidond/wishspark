@@ -1,0 +1,53 @@
+{
+  "name": "WishSpark Dev",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "dev",
+  "runServices": [
+    "db",
+    "dev"
+  ],
+  "overrideCommand": false,
+  "shutdownAction": "stopCompose",
+  "workspaceFolder": "/workspaces/wishspark",
+  "features": {
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "latest",
+      "installPnpm": true
+    },
+    "ghcr.io/joshuanianji/devcontainer-features/mount-pnpm-store:1": {}
+  },
+  "remoteUser": "vscode",
+  "updateRemoteUserUID": true,
+  "init": true,
+  "userEnvProbe": "loginInteractiveShell",
+  "customizations": {
+    "vscode": {
+      "settings": {},
+      "extensions": [
+        "Vue.volar",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  },
+  "mounts": [],
+  "containerEnv": {
+    "PGHOST": "db",
+    "PGUSER": "wishspark",
+    "PGPASSWORD": "wishspark",
+    "PGDATABASE": "wishspark",
+    "DATABASE_URL": "postgres://wishspark:wishspark@db:5432/wishspark?sslmode=disable"
+  },
+  "forwardPorts": [
+    3000
+  ],
+  "portsAttributes": {
+    "3000": {
+      "label": "Nuxt dev"
+    }
+  }
+}

@@ -1,0 +1,30 @@
+services:
+  dev:
+    image: mcr.microsoft.com/devcontainers/base:ubuntu
+    init: true
+    volumes:
+      - ..:/workspaces/wishspark:cached
+    user: vscode
+    working_dir: /workspaces/wishspark
+    command: sleep infinity
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: wishspark
+      POSTGRES_PASSWORD: wishspark
+      POSTGRES_DB: wishspark
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U wishspark']
+      interval: 3s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
